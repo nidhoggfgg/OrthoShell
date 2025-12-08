@@ -50,6 +50,23 @@
         button:hover { filter: brightness(1.1); }
         button:active { transform: scale(0.98); }
         button:disabled { background: #444; cursor: not-allowed; transform: none; }
+
+        .export-button {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+
+        .export-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .export-group button {
+            padding: 8px;
+            font-size: 11px;
+            margin-top: 0;
+        }
         
         #status { margin-top:10px; font-size: 12px; color: #ffd700; line-height: 1.4; min-height: 20px;}
         .hint { font-size: 11px; color: #666; margin-top:3px;}
@@ -59,7 +76,8 @@
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.150.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.150.0/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.150.0/examples/jsm/",
+                "three/addons/exporters/": "https://unpkg.com/three@0.150.0/examples/jsm/exporters/"
             }
         }
     </script>
@@ -115,6 +133,17 @@
         </div>
 
         <button id="btn-generate">生成模型</button>
+
+        <div class="input-group" style="margin-top: 15px;">
+            <label style="color: #28a745;">📦 导出3D模型</label>
+            <div class="export-group">
+                <button id="btn-export-stl" class="export-button" disabled>STL</button>
+                <button id="btn-export-obj" class="export-button" disabled>OBJ</button>
+                <button id="btn-export-gltf" class="export-button" disabled>GLTF</button>
+            </div>
+            <div class="hint">生成模型后可导出为3D打印或其他软件使用</div>
+        </div>
+
         <div id="status"></div>
     </div>
 
@@ -123,6 +152,8 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+        import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
         let scene, camera, renderer, controls, voxelMesh;
 
@@ -421,6 +452,11 @@
                 voxelMesh = new THREE.Mesh(geometry, material);
                 scene.add(voxelMesh);
 
+                // 启用导出按钮
+                document.getElementById('btn-export-stl').disabled = false;
+                document.getElementById('btn-export-obj').disabled = false;
+                document.getElementById('btn-export-gltf').disabled = false;
+
                 status.innerText = `✅ 完成! 高度:${targetHeight}px | 体素数:${visibleKeys.size}`;
 
             } catch (err) {
@@ -431,7 +467,110 @@
             }
         }
 
+        // ============ 导出功能 ============
+
+        function downloadFile(blob, filename) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 100);
+        }
+
+        // 导出STL格式 (适合3D打印)
+        function exportSTL() {
+            if (!voxelMesh) return alert('请先生成模型');
+
+            const exporter = new STLExporter();
+            const stlString = exporter.parse(voxelMesh, { binary: false });
+            const blob = new Blob([stlString], { type: 'text/plain' });
+            downloadFile(blob, 'model.stl');
+
+            document.getElementById('status').innerText = '✅ STL文件已导出';
+        }
+
+        // 导出OBJ格式 (通用格式,支持颜色)
+        function exportOBJ() {
+            if (!voxelMesh) return alert('请先生成模型');
+
+            const geometry = voxelMesh.geometry;
+            const position = geometry.getAttribute('position');
+            const color = geometry.getAttribute('color');
+
+            let objContent = '# OBJ File Generated from 3D Voxel Generator\n';
+            objContent += 'mtllib model.mtl\n';
+            objContent += 'usemtl material0\n\n';
+
+            // 顶点坐标
+            for (let i = 0; i < position.count; i++) {
+                const x = position.getX(i);
+                const y = position.getY(i);
+                const z = position.getZ(i);
+                objContent += `v ${x.toFixed(4)} ${y.toFixed(4)} ${z.toFixed(4)}`;
+
+                // 添加顶点颜色
+                if (color) {
+                    const r = color.getX(i);
+                    const g = color.getY(i);
+                    const b = color.getZ(i);
+                    objContent += ` ${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)}`;
+                }
+                objContent += '\n';
+            }
+
+            objContent += '\n';
+
+            // 面索引 (OBJ索引从1开始)
+            for (let i = 0; i < position.count; i += 3) {
+                objContent += `f ${i+1} ${i+2} ${i+3}\n`;
+            }
+
+            const blob = new Blob([objContent], { type: 'text/plain' });
+            downloadFile(blob, 'model.obj');
+
+            // 同时导出MTL文件 (材质文件)
+            let mtlContent = '# MTL File\n';
+            mtlContent += 'newmtl material0\n';
+            mtlContent += 'Ka 1.0 1.0 1.0\n';
+            mtlContent += 'Kd 0.8 0.8 0.8\n';
+            mtlContent += 'Ks 0.5 0.5 0.5\n';
+            mtlContent += 'Ns 32.0\n';
+            mtlContent += 'd 1.0\n';
+            mtlContent += 'illum 2\n';
+
+            const mtlBlob = new Blob([mtlContent], { type: 'text/plain' });
+            downloadFile(mtlBlob, 'model.mtl');
+
+            document.getElementById('status').innerText = '✅ OBJ文件已导出 (含MTL材质)';
+        }
+
+        // 导出GLTF格式 (现代Web3D标准)
+        function exportGLTF() {
+            if (!voxelMesh) return alert('请先生成模型');
+
+            const exporter = new GLTFExporter();
+
+            exporter.parse(
+                voxelMesh,
+                function(result) {
+                    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+                    downloadFile(blob, 'model.gltf');
+                    document.getElementById('status').innerText = '✅ GLTF文件已导出';
+                },
+                function(error) {
+                    console.error('导出GLTF失败:', error);
+                    alert('导出失败: ' + error);
+                },
+                { binary: false }
+            );
+        }
+
+        // ============ 事件监听 ============
+
         document.getElementById('btn-generate').addEventListener('click', generate);
+        document.getElementById('btn-export-stl').addEventListener('click', exportSTL);
+        document.getElementById('btn-export-obj').addEventListener('click', exportOBJ);
+        document.getElementById('btn-export-gltf').addEventListener('click', exportGLTF);
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
