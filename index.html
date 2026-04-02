@@ -34,12 +34,13 @@
                 <input type="file" id="fileSide" accept="image/*">
             </div>
 
-            <div class="advanced-panel">
-                <button id="advanced-toggle" class="advanced-toggle" type="button" aria-expanded="false" aria-controls="advanced-body">
-                    显示高级选项
-                </button>
+            <details id="advanced-panel" class="advanced-panel">
+                <summary class="advanced-summary">
+                    <span class="advanced-summary-title">高级选项</span>
+                    <span class="advanced-summary-hint">过滤、壳厚、分辨率</span>
+                </summary>
 
-                <div id="advanced-body" class="advanced-body" hidden>
+                <div id="advanced-body" class="advanced-body">
                     <div class="input-group filter-panel">
                         <label>过滤规则 (保留物体区域)</label>
                         <div class="filter-alpha-row">
@@ -76,7 +77,7 @@
                         <input type="number" id="resolution" min="10" max="600" value="150" step="1">
                     </div>
                 </div>
-            </div>
+            </details>
 
             <button id="btn-generate">生成模型</button>
 
@@ -85,11 +86,17 @@
                 <div class="preview-grid">
                     <div class="preview-card">
                         <span class="preview-card-title">Front</span>
-                        <canvas id="preview-front" width="150" height="150"></canvas>
+                        <div class="preview-canvas-shell">
+                            <canvas id="preview-front" width="160" height="160"></canvas>
+                            <span class="preview-placeholder">等待处理结果</span>
+                        </div>
                     </div>
                     <div class="preview-card">
                         <span class="preview-card-title">Side</span>
-                        <canvas id="preview-side" width="150" height="150"></canvas>
+                        <div class="preview-canvas-shell">
+                            <canvas id="preview-side" width="160" height="160"></canvas>
+                            <span class="preview-placeholder">等待处理结果</span>
+                        </div>
                     </div>
                 </div>
                 <div class="hint">这里显示裁剪、缩放和过滤后的结果，方便检查输入是否正确。</div>

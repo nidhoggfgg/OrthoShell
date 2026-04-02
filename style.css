@@ -54,6 +54,9 @@ h3 {
 
 .advanced-panel {
     margin-bottom: 12px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
 }
 
 label {
@@ -160,17 +163,45 @@ button:disabled {
     border: 1px solid #4a4a4a;
 }
 
-.advanced-toggle {
-    margin-top: 0;
+.advanced-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+    color: #dbefff;
     font-size: 12px;
-    text-align: left;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid #464646;
+    user-select: none;
+}
+
+.advanced-summary::-webkit-details-marker {
+    display: none;
+}
+
+.advanced-summary::after {
+    content: "展开";
+    color: #7fd4ff;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+}
+
+.advanced-panel[open] .advanced-summary::after {
+    content: "收起";
+}
+
+.advanced-summary-title {
+    font-weight: 700;
+}
+
+.advanced-summary-hint {
+    color: #7a8b97;
+    font-size: 11px;
 }
 
 .advanced-body {
-    margin-top: 10px;
+    margin: 0 12px 12px;
     padding-top: 10px;
     border-top: 1px solid #3b3b3b;
 }
@@ -261,6 +292,13 @@ button:disabled {
     padding: 8px;
 }
 
+.preview-canvas-shell {
+    position: relative;
+    min-height: 160px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
 .preview-card-title {
     display: block;
     margin-bottom: 6px;
@@ -273,7 +311,7 @@ button:disabled {
 .preview-card canvas {
     display: block;
     width: 100%;
-    max-height: 160px;
+    height: 160px;
     background:
         linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%),
         linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%);
@@ -281,6 +319,24 @@ button:disabled {
     background-size: 16px 16px;
     border-radius: 4px;
     image-rendering: pixelated;
+}
+
+.preview-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    color: #7a8b97;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+}
+
+.preview-card.has-image .preview-placeholder {
+    display: none;
 }
 
 #status {
