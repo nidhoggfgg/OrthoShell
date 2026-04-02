@@ -19,66 +19,71 @@
 <body>
 
     <div id="ui-container">
-        <h3>🛠️ 3D 生成控制台</h3>
-        
-        <div class="input-group">
-            <label class="highlight-label">图片1: 正面视图 (Front)</label>
-            <input type="file" id="fileFront">
-        </div>
-        <div class="input-group">
-            <label class="highlight-label">图片2: 侧面视图 (Side)</label>
-            <input type="file" id="fileSide">
+        <div class="ui-header">
+            <h3>🛠️ 3D 生成控制台</h3>
+            <button id="ui-toggle" class="ui-toggle" type="button" aria-expanded="true" aria-controls="ui-panel-body">收起</button>
         </div>
 
-        <div class="input-group" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid #444;">
-            <label>过滤规则 (保留物体区域)</label>
-            <div style="margin-bottom:8px; display:flex; align-items:center;">
-                <input type="checkbox" id="filter-alpha" checked style="margin-right:8px;">
-                <label for="filter-alpha" style="font-weight:normal; cursor:pointer; color:#fff;">忽略透明像素 (PNG)</label>
+        <div id="ui-panel-body">
+            <div class="input-group">
+                <label class="highlight-label">图片1: 正面视图 (Front)</label>
+                <input type="file" id="fileFront">
             </div>
-            <div class="filter-grid">
-                <input type="checkbox" id="use-r" checked><span style="color:#ff5555; font-weight:bold;">R</span>
-                <select id="op-r"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-r" value="250">
-                
-                <input type="checkbox" id="use-g" checked><span style="color:#55ff55; font-weight:bold;">G</span>
-                <select id="op-g"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-g" value="250">
-
-                <input type="checkbox" id="use-b" checked><span style="color:#55aaff; font-weight:bold;">B</span>
-                <select id="op-b"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-b" value="250">
+            <div class="input-group">
+                <label class="highlight-label">图片2: 侧面视图 (Side)</label>
+                <input type="file" id="fileSide">
             </div>
-        </div>
 
-        <div class="input-group checkbox-wrapper">
-            <div>
-                <label for="enable-culling">启用内部剔除</label>
+            <div class="input-group filter-panel">
+                <label>过滤规则 (保留物体区域)</label>
+                <div class="filter-alpha-row">
+                    <input type="checkbox" id="filter-alpha" checked>
+                    <label for="filter-alpha" class="filter-alpha-label">忽略透明像素 (PNG)</label>
+                </div>
+                <div class="filter-grid">
+                    <input type="checkbox" id="use-r" checked><span class="channel-label channel-r">R</span>
+                    <select id="op-r"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-r" value="250">
+
+                    <input type="checkbox" id="use-g" checked><span class="channel-label channel-g">G</span>
+                    <select id="op-g"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-g" value="250">
+
+                    <input type="checkbox" id="use-b" checked><span class="channel-label channel-b">B</span>
+                    <select id="op-b"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-b" value="250">
+                </div>
             </div>
-            <input type="checkbox" id="enable-culling" checked>
-        </div>
 
-        <div class="input-group">
-            <label>保留壳厚度 (层数)</label>
-            <input type="number" id="shell-thickness" min="1" max="10" value="2">
-            <div class="hint">1层 = 仅表面; 2-5层 = 加厚外壳。<br>数值越大，生成的内部点越多。</div>
-        </div>
-
-        <div class="input-group">
-            <label>分辨率高度 (px)</label>
-            <input type="number" id="resolution" min="10" max="600" value="150" step="1">
-        </div>
-
-        <button id="btn-generate">生成模型</button>
-
-        <div class="input-group" style="margin-top: 15px;">
-            <label style="color: #28a745;">📦 导出3D模型</label>
-            <div class="export-group">
-                <button id="btn-export-stl" class="export-button" disabled>STL</button>
-                <button id="btn-export-obj" class="export-button" disabled>OBJ</button>
-                <button id="btn-export-gltf" class="export-button" disabled>GLTF</button>
+            <div class="input-group checkbox-wrapper">
+                <div>
+                    <label for="enable-culling">启用内部剔除</label>
+                </div>
+                <input type="checkbox" id="enable-culling" checked>
             </div>
-            <div class="hint">生成模型后可导出为3D打印或其他软件使用</div>
-        </div>
 
-        <div id="status"></div>
+            <div class="input-group">
+                <label>保留壳厚度 (层数)</label>
+                <input type="number" id="shell-thickness" min="1" max="10" value="2">
+                <div class="hint">1层 = 仅表面; 2-5层 = 加厚外壳。<br>数值越大，生成的内部点越多。</div>
+            </div>
+
+            <div class="input-group">
+                <label>分辨率高度 (px)</label>
+                <input type="number" id="resolution" min="10" max="600" value="150" step="1">
+            </div>
+
+            <button id="btn-generate">生成模型</button>
+
+            <div class="input-group export-panel">
+                <label class="export-label">📦 导出3D模型</label>
+                <div class="export-group">
+                    <button id="btn-export-stl" class="export-button" disabled>STL</button>
+                    <button id="btn-export-obj" class="export-button" disabled>OBJ</button>
+                    <button id="btn-export-gltf" class="export-button" disabled>GLTF</button>
+                </div>
+                <div class="hint">生成模型后可导出为3D打印或其他软件使用</div>
+            </div>
+
+            <div id="status"></div>
+        </div>
     </div>
 
     <div id="canvas-container"></div>

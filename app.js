@@ -38,6 +38,15 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+function setUiCollapsed(collapsed) {
+    const uiContainer = document.getElementById('ui-container');
+    const toggleButton = document.getElementById('ui-toggle');
+
+    uiContainer.classList.toggle('collapsed', collapsed);
+    toggleButton.textContent = collapsed ? '展开' : '收起';
+    toggleButton.setAttribute('aria-expanded', String(!collapsed));
+}
+
 function readImage(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -419,9 +428,14 @@ document.getElementById('btn-generate').addEventListener('click', generate);
 document.getElementById('btn-export-stl').addEventListener('click', exportSTL);
 document.getElementById('btn-export-obj').addEventListener('click', exportOBJ);
 document.getElementById('btn-export-gltf').addEventListener('click', exportGLTF);
+document.getElementById('ui-toggle').addEventListener('click', () => {
+    const uiContainer = document.getElementById('ui-container');
+    setUiCollapsed(!uiContainer.classList.contains('collapsed'));
+});
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+setUiCollapsed(false);
 init();

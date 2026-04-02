@@ -20,12 +20,27 @@ body {
     backdrop-filter: blur(5px);
 }
 
+.ui-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #444;
+}
+
 h3 {
-    margin: 0 0 12px 0;
+    margin: 0;
     font-size: 16px;
     color: #00d2ff;
-    border-bottom: 1px solid #444;
-    padding-bottom: 8px;
+}
+
+#ui-panel-body {
+    margin-top: 12px;
+}
+
+#ui-container.collapsed #ui-panel-body {
+    display: none;
 }
 
 .input-group {
@@ -126,8 +141,63 @@ button:disabled {
     transform: none;
 }
 
+.ui-toggle {
+    width: auto;
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid #4a4a4a;
+}
+
+.filter-panel {
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.filter-alpha-row {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-alpha-label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+    color: #fff;
+}
+
+.channel-label {
+    font-weight: bold;
+}
+
+.channel-r {
+    color: #ff5555;
+}
+
+.channel-g {
+    color: #55ff55;
+}
+
+.channel-b {
+    color: #55aaff;
+}
+
 .export-button {
     background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.export-panel {
+    margin-top: 15px;
+}
+
+.export-label {
+    color: #28a745;
 }
 
 .export-group {
