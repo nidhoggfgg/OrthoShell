@@ -15,6 +15,15 @@ function setUiCollapsed(collapsed) {
     toggleButton.setAttribute('aria-expanded', String(!collapsed));
 }
 
+function setAdvancedCollapsed(collapsed) {
+    const advancedBody = document.getElementById('advanced-body');
+    const toggleButton = document.getElementById('advanced-toggle');
+
+    advancedBody.hidden = collapsed;
+    toggleButton.textContent = collapsed ? '显示高级选项' : '隐藏高级选项';
+    toggleButton.setAttribute('aria-expanded', String(!collapsed));
+}
+
 function getNumericInput(id, fallback) {
     const value = parseInt(document.getElementById(id).value, 10);
     return Number.isNaN(value) ? fallback : value;
@@ -49,6 +58,33 @@ function setExportEnabled(enabled) {
 
 function setStatus(message) {
     document.getElementById('status').innerText = message;
+}
+
+function drawProjectionPreview(canvasId, projection) {
+    const canvas = document.getElementById(canvasId);
+    const context = canvas.getContext('2d');
+
+    canvas.width = projection.width;
+    canvas.height = projection.height;
+    context.clearRect(0, 0, projection.width, projection.height);
+    context.putImageData(new ImageData(new Uint8ClampedArray(projection.data), projection.width, projection.height), 0, 0);
+}
+
+function clearProjectionPreview(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const context = canvas.getContext('2d');
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function updateProjectionPreviews(front, side) {
+    drawProjectionPreview('preview-front', front);
+    drawProjectionPreview('preview-side', side);
+}
+
+function clearProjectionPreviews() {
+    clearProjectionPreview('preview-front');
+    clearProjectionPreview('preview-side');
 }
 
 async function nextFrame() {
@@ -90,6 +126,7 @@ async function generate() {
             targetHeight: resolution
         });
 
+        updateProjectionPreviews(front, side);
         setStatus(`正在重建体素 (${front.width} x ${resolution} x ${side.width})...`);
         await nextFrame();
 
@@ -147,14 +184,22 @@ document.getElementById('btn-export-gltf').addEventListener('click', async () =>
         alert(`导出失败: ${error.message || error}`);
     }
 });
+document.getElementById('advanced-toggle').addEventListener('click', () => {
+    const advancedBody = document.getElementById('advanced-body');
+    setAdvancedCollapsed(!advancedBody.hidden);
+});
 document.getElementById('ui-toggle').addEventListener('click', () => {
     const uiContainer = document.getElementById('ui-container');
     setUiCollapsed(!uiContainer.classList.contains('collapsed'));
 });
+document.getElementById('fileFront').addEventListener('change', clearProjectionPreviews);
+document.getElementById('fileSide').addEventListener('change', clearProjectionPreviews);
 
 window.addEventListener('resize', () => {
     sceneApp.resize(window.innerWidth, window.innerHeight);
 });
 
 setUiCollapsed(false);
+setAdvancedCollapsed(true);
 setExportEnabled(false);
+clearProjectionPreviews();

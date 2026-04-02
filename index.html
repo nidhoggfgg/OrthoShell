@@ -34,43 +34,66 @@
                 <input type="file" id="fileSide" accept="image/*">
             </div>
 
-            <div class="input-group filter-panel">
-                <label>过滤规则 (保留物体区域)</label>
-                <div class="filter-alpha-row">
-                    <input type="checkbox" id="filter-alpha" checked>
-                    <label for="filter-alpha" class="filter-alpha-label">忽略透明像素 (PNG)</label>
+            <div class="advanced-panel">
+                <button id="advanced-toggle" class="advanced-toggle" type="button" aria-expanded="false" aria-controls="advanced-body">
+                    显示高级选项
+                </button>
+
+                <div id="advanced-body" class="advanced-body" hidden>
+                    <div class="input-group filter-panel">
+                        <label>过滤规则 (保留物体区域)</label>
+                        <div class="filter-alpha-row">
+                            <input type="checkbox" id="filter-alpha" checked>
+                            <label for="filter-alpha" class="filter-alpha-label">忽略透明像素 (PNG)</label>
+                        </div>
+                        <div class="filter-grid">
+                            <input type="checkbox" id="use-r" checked><span class="channel-label channel-r">R</span>
+                            <select id="op-r"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-r" value="250">
+
+                            <input type="checkbox" id="use-g" checked><span class="channel-label channel-g">G</span>
+                            <select id="op-g"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-g" value="250">
+
+                            <input type="checkbox" id="use-b" checked><span class="channel-label channel-b">B</span>
+                            <select id="op-b"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-b" value="250">
+                        </div>
+                    </div>
+
+                    <div class="input-group checkbox-wrapper">
+                        <div>
+                            <label for="enable-culling">启用内部剔除</label>
+                        </div>
+                        <input type="checkbox" id="enable-culling" checked>
+                    </div>
+
+                    <div class="input-group">
+                        <label>保留壳厚度 (层数)</label>
+                        <input type="number" id="shell-thickness" min="1" max="10" value="2">
+                        <div class="hint">1层 = 仅表面; 2-5层 = 加厚外壳。<br>数值越大，生成的内部点越多。</div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>分辨率高度 (px)</label>
+                        <input type="number" id="resolution" min="10" max="600" value="150" step="1">
+                    </div>
                 </div>
-                <div class="filter-grid">
-                    <input type="checkbox" id="use-r" checked><span class="channel-label channel-r">R</span>
-                    <select id="op-r"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-r" value="250">
-
-                    <input type="checkbox" id="use-g" checked><span class="channel-label channel-g">G</span>
-                    <select id="op-g"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-g" value="250">
-
-                    <input type="checkbox" id="use-b" checked><span class="channel-label channel-b">B</span>
-                    <select id="op-b"><option value="<">&lt;</option><option value=">">&gt;</option></select><input type="number" id="val-b" value="250">
-                </div>
-            </div>
-
-            <div class="input-group checkbox-wrapper">
-                <div>
-                    <label for="enable-culling">启用内部剔除</label>
-                </div>
-                <input type="checkbox" id="enable-culling" checked>
-            </div>
-
-            <div class="input-group">
-                <label>保留壳厚度 (层数)</label>
-                <input type="number" id="shell-thickness" min="1" max="10" value="2">
-                <div class="hint">1层 = 仅表面; 2-5层 = 加厚外壳。<br>数值越大，生成的内部点越多。</div>
-            </div>
-
-            <div class="input-group">
-                <label>分辨率高度 (px)</label>
-                <input type="number" id="resolution" min="10" max="600" value="150" step="1">
             </div>
 
             <button id="btn-generate">生成模型</button>
+
+            <div class="input-group preview-panel">
+                <label class="preview-label">处理后的投影视图</label>
+                <div class="preview-grid">
+                    <div class="preview-card">
+                        <span class="preview-card-title">Front</span>
+                        <canvas id="preview-front" width="150" height="150"></canvas>
+                    </div>
+                    <div class="preview-card">
+                        <span class="preview-card-title">Side</span>
+                        <canvas id="preview-side" width="150" height="150"></canvas>
+                    </div>
+                </div>
+                <div class="hint">这里显示裁剪、缩放和过滤后的结果，方便检查输入是否正确。</div>
+            </div>
 
             <div class="input-group export-panel">
                 <label class="export-label">📦 导出3D模型</label>
