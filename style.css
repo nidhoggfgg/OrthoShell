@@ -6,6 +6,11 @@ body {
     color: #eee;
 }
 
+#canvas-container {
+    width: 100vw;
+    height: 100vh;
+}
+
 #ui-container {
     position: absolute;
     top: 10px;

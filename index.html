@@ -27,11 +27,11 @@
         <div id="ui-panel-body">
             <div class="input-group">
                 <label class="highlight-label">图片1: 正面视图 (Front)</label>
-                <input type="file" id="fileFront">
+                <input type="file" id="fileFront" accept="image/*">
             </div>
             <div class="input-group">
                 <label class="highlight-label">图片2: 侧面视图 (Side)</label>
-                <input type="file" id="fileSide">
+                <input type="file" id="fileSide" accept="image/*">
             </div>
 
             <div class="input-group filter-panel">
@@ -82,7 +82,7 @@
                 <div class="hint">生成模型后可导出为3D打印或其他软件使用</div>
             </div>
 
-            <div id="status"></div>
+            <div id="status" aria-live="polite"></div>
         </div>
     </div>
 
