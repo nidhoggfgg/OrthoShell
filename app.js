@@ -9,6 +9,36 @@ const PREVIEW_CANVAS_SIZE = 160;
 let previewRefreshToken = 0;
 let previewRefreshTimer = null;
 
+const MATERIAL_PRESETS = {
+    none: null,
+    matte: {
+        roughness: 0.88,
+        metalness: 0.04,
+        envMapIntensity: 0.45
+    },
+    resin: {
+        roughness: 0.3,
+        metalness: 0.02,
+        envMapIntensity: 0.85,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.24
+    },
+    ceramic: {
+        roughness: 0.42,
+        metalness: 0.08,
+        envMapIntensity: 0.72,
+        clearcoat: 0.45,
+        clearcoatRoughness: 0.12
+    },
+    metal: {
+        roughness: 0.34,
+        metalness: 0.32,
+        envMapIntensity: 1.05,
+        clearcoat: 0.18,
+        clearcoatRoughness: 0.18
+    }
+};
+
 function setUiCollapsed(collapsed) {
     const uiContainer = document.getElementById('ui-container');
     const toggleButton = document.getElementById('ui-toggle');
@@ -66,6 +96,37 @@ function setExportEnabled(enabled) {
 
 function setStatus(message) {
     document.getElementById('status').innerText = message;
+}
+
+function createPreviewMaterial() {
+    const presetName = document.getElementById('material-preset').value;
+    const preset = MATERIAL_PRESETS[presetName] || MATERIAL_PRESETS.matte;
+
+    if (presetName === 'none' || !preset) {
+        return new THREE.MeshBasicMaterial({
+            vertexColors: true
+        });
+    }
+
+    return new THREE.MeshPhysicalMaterial({
+        vertexColors: true,
+        reflectivity: 0.35,
+        sheen: 0.08,
+        sheenRoughness: 0.8,
+        ...preset
+    });
+}
+
+function updateCurrentMeshMaterial() {
+    const mesh = sceneApp.getMesh();
+
+    if (!mesh) {
+        return;
+    }
+
+    const previousMaterial = mesh.material;
+    mesh.material = createPreviewMaterial();
+    previousMaterial.dispose();
 }
 
 function setPreviewCardState(canvasId, hasImage) {
@@ -206,13 +267,7 @@ async function generate() {
             useCulling
         });
 
-        const material = new THREE.MeshStandardMaterial({
-            vertexColors: true,
-            roughness: 0.7,
-            metalness: 0.1
-        });
-
-        const mesh = new THREE.Mesh(result.geometry, material);
+        const mesh = new THREE.Mesh(result.geometry, createPreviewMaterial());
         sceneApp.setMesh(mesh);
         setExportEnabled(true);
         setStatus(
@@ -261,6 +316,7 @@ document.getElementById('fileFront').addEventListener('change', scheduleProjecti
 document.getElementById('fileSide').addEventListener('change', scheduleProjectionPreviewRefresh);
 document.getElementById('advanced-body').addEventListener('input', scheduleProjectionPreviewRefresh);
 document.getElementById('advanced-body').addEventListener('change', scheduleProjectionPreviewRefresh);
+document.getElementById('material-preset').addEventListener('change', updateCurrentMeshMaterial);
 
 window.addEventListener('resize', () => {
     sceneApp.resize(window.innerWidth, window.innerHeight);

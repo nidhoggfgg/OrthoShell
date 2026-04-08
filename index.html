@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D体素生成器 (可控壳厚度版)</title>
+    <title>OrthoShell 3D 体素生成器</title>
     <link rel="stylesheet" href="style.css">
     
     <script type="importmap">
@@ -17,10 +17,14 @@
     </script>
 </head>
 <body>
+    <div class="app-backdrop" aria-hidden="true"></div>
 
     <div id="ui-container">
         <div class="ui-header">
-            <h3>🛠️ 3D 生成控制台</h3>
+            <div>
+                <p class="eyebrow">OrthoShell</p>
+                <h3>3D 生成控制台</h3>
+            </div>
             <button id="ui-toggle" class="ui-toggle" type="button" aria-expanded="true" aria-controls="ui-panel-body">收起</button>
         </div>
 
@@ -76,6 +80,18 @@
                         <label>分辨率高度 (px)</label>
                         <input type="number" id="resolution" min="10" max="600" value="150" step="1">
                     </div>
+
+                    <div class="input-group">
+                        <label for="material-preset">材质预设</label>
+                        <select id="material-preset">
+                            <option value="none" selected>无材质</option>
+                            <option value="matte">磨砂塑料</option>
+                            <option value="resin">树脂半透感</option>
+                            <option value="ceramic">陶瓷光泽</option>
+                            <option value="metal">金属展示感</option>
+                        </select>
+                        <div class="hint">仅影响实时预览，不改变几何与导出流程。</div>
+                    </div>
                 </div>
             </details>
 
@@ -103,7 +119,7 @@
             </div>
 
             <div class="input-group export-panel">
-                <label class="export-label">📦 导出3D模型</label>
+                <label class="export-label">导出 3D 模型</label>
                 <div class="export-group">
                     <button id="btn-export-stl" class="export-button" disabled>STL</button>
                     <button id="btn-export-obj" class="export-button" disabled>OBJ</button>

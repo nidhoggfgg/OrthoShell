@@ -1,49 +1,108 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+function disposeMaterial(material) {
+    if (Array.isArray(material)) {
+        for (const entry of material) {
+            entry.dispose();
+        }
+        return;
+    }
+
+    material.dispose();
+}
+
+function setShadowState(object, enabled) {
+    object.traverse((child) => {
+        if (!child.isMesh) {
+            return;
+        }
+
+        child.castShadow = enabled;
+    });
+}
+
 function fitCameraToMesh(camera, controls, mesh) {
     const box = new THREE.Box3().setFromObject(mesh);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const maxSize = Math.max(size.x, size.y, size.z, 1);
-    const distance = maxSize * 1.4;
+    const maxDim = Math.max(size.x, size.y, size.z, 1);
+    const fov = THREE.MathUtils.degToRad(camera.fov);
+    const fitHeightDistance = maxDim / (2 * Math.tan(fov / 2));
+    const fitWidthDistance = fitHeightDistance / camera.aspect;
+    const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.45;
+    const offset = new THREE.Vector3(distance, distance * 0.52, distance * 0.92);
 
-    camera.near = Math.max(0.1, maxSize / 100);
-    camera.far = Math.max(5000, distance * 10);
-    camera.position.copy(center).add(new THREE.Vector3(distance, distance * 0.8, distance));
+    camera.near = Math.max(0.1, maxDim / 200);
+    camera.far = Math.max(2000, distance * 12);
+    camera.position.copy(center).add(offset);
     camera.updateProjectionMatrix();
 
-    controls.target.copy(center);
+    controls.target.copy(center).add(new THREE.Vector3(0, size.y * 0.1, 0));
+    controls.minDistance = Math.max(maxDim * 0.55, 12);
+    controls.maxDistance = Math.max(distance * 3.5, 240);
     controls.update();
 }
 
+function updateStageForMesh(grid, keyLight, mesh) {
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const radius = Math.max(size.x, size.z, 40) * 1.4;
+    const floorY = box.min.y - 0.75;
+
+    grid.position.set(center.x, floorY + 0.02, center.z);
+    grid.scale.setScalar(Math.max(radius / 180, 0.75));
+
+    keyLight.target.position.copy(center);
+    keyLight.target.updateMatrixWorld();
+}
+
 export function createSceneApp(container) {
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || window.innerHeight;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
+    scene.fog = new THREE.Fog(0xd5dde7, 450, 1400);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(200, 150, 200);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 5000);
+    camera.position.set(180, 120, 180);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI * 0.48;
+    controls.target.set(0, 0, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    scene.add(new THREE.HemisphereLight(0xf8fbff, 0x8b96a3, 1.05));
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    mainLight.position.set(100, 200, 150);
-    scene.add(mainLight);
+    const fillLight = new THREE.DirectionalLight(0xc6e1ff, 0.6);
+    fillLight.position.set(-120, 90, -140);
+    scene.add(fillLight);
 
-    const backLight = new THREE.DirectionalLight(0xaaccff, 0.3);
-    backLight.position.set(-100, 50, -100);
-    scene.add(backLight);
+    const rimLight = new THREE.DirectionalLight(0xfff0d6, 0.45);
+    rimLight.position.set(80, 60, -170);
+    scene.add(rimLight);
 
-    const grid = new THREE.GridHelper(600, 24, 0x34536b, 0x22303c);
-    grid.position.y = -120;
+    const keyLight = new THREE.DirectionalLight(0xfff6ec, 1.95);
+    keyLight.position.set(180, 240, 160);
+    scene.add(keyLight);
+    scene.add(keyLight.target);
+
+    const grid = new THREE.GridHelper(180, 18, 0xb9c8d8, 0xdbe4ec);
+    grid.material.opacity = 0.26;
+    grid.material.transparent = true;
     scene.add(grid);
 
     let currentMesh = null;
@@ -58,18 +117,20 @@ export function createSceneApp(container) {
         if (currentMesh) {
             scene.remove(currentMesh);
             currentMesh.geometry.dispose();
-            currentMesh.material.dispose();
+            disposeMaterial(currentMesh.material);
         }
 
         currentMesh = mesh;
+        setShadowState(mesh, false);
         scene.add(mesh);
+        updateStageForMesh(grid, keyLight, mesh);
         fitCameraToMesh(camera, controls, mesh);
     }
 
-    function resize(width, height) {
-        camera.aspect = width / height;
+    function resize(widthValue, heightValue) {
+        camera.aspect = widthValue / heightValue;
         camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
+        renderer.setSize(widthValue, heightValue);
     }
 
     animate();
