@@ -1,13 +1,14 @@
-import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+import type { Mesh } from 'three';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
-function assertMesh(mesh) {
+function assertMesh(mesh: Mesh | null): asserts mesh is Mesh {
     if (!mesh) {
         throw new Error('请先生成模型');
     }
 }
 
-function downloadFile(blob, filename) {
+function downloadFile(blob: Blob, filename: string) {
     const link = document.createElement('a');
     const objectUrl = URL.createObjectURL(blob);
 
@@ -15,10 +16,10 @@ function downloadFile(blob, filename) {
     link.download = filename;
     link.click();
 
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
 }
 
-export function exportSTL(mesh) {
+export function exportSTL(mesh: Mesh | null) {
     assertMesh(mesh);
 
     const exporter = new STLExporter();
@@ -26,7 +27,7 @@ export function exportSTL(mesh) {
     downloadFile(new Blob([stlString], { type: 'text/plain' }), 'model.stl');
 }
 
-export function exportOBJ(mesh) {
+export function exportOBJ(mesh: Mesh | null) {
     assertMesh(mesh);
 
     const geometry = mesh.geometry;
@@ -64,21 +65,20 @@ export function exportOBJ(mesh) {
     downloadFile(new Blob([mtlContent], { type: 'text/plain' }), 'model.mtl');
 }
 
-export function exportGLTF(mesh) {
+export function exportGLTF(mesh: Mesh | null) {
     assertMesh(mesh);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         const exporter = new GLTFExporter();
         exporter.parse(
             mesh,
-            (result) => {
-                downloadFile(
-                    new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }),
-                    'model.gltf'
-                );
+            (result: object) => {
+                downloadFile(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }), 'model.gltf');
                 resolve();
             },
-            reject,
+            (error: unknown) => {
+                reject(error);
+            },
             { binary: false }
         );
     });

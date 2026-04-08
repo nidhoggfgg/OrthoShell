@@ -1,5 +1,32 @@
-function readImage(file) {
-    return new Promise((resolve, reject) => {
+export type ChannelFilter = {
+    enabled: boolean;
+    op: string;
+    val: number;
+};
+
+export type FilterConfig = {
+    alpha: boolean;
+    r: ChannelFilter;
+    g: ChannelFilter;
+    b: ChannelFilter;
+};
+
+export type ProjectionImage = {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+};
+
+type BoundsInfo = {
+    canvas: HTMLCanvasElement;
+    minX: number;
+    minY: number;
+    width: number;
+    height: number;
+};
+
+function readImage(file: File) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
         const objectUrl = URL.createObjectURL(file);
         const img = new Image();
 
@@ -15,7 +42,7 @@ function readImage(file) {
     });
 }
 
-export function isPixelObject(data, index, config) {
+export function isPixelObject(data: Uint8ClampedArray, index: number, config: FilterConfig) {
     const r = data[index];
     const g = data[index + 1];
     const b = data[index + 2];
@@ -40,11 +67,16 @@ export function isPixelObject(data, index, config) {
     return true;
 }
 
-function getVisibleBounds(img, filterConfig) {
+function getVisibleBounds(img: HTMLImageElement, filterConfig: FilterConfig) {
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
     canvas.height = img.height;
     const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+        throw new Error('Canvas 2D context is unavailable');
+    }
+
     ctx.drawImage(img, 0, 0);
 
     const imageData = ctx.getImageData(0, 0, img.width, img.height);
@@ -79,10 +111,10 @@ function getVisibleBounds(img, filterConfig) {
         minY,
         width: maxX - minX + 1,
         height: maxY - minY + 1
-    };
+    } satisfies BoundsInfo;
 }
 
-function cropAndResize(boundsInfo, targetHeight, filterConfig) {
+function cropAndResize(boundsInfo: BoundsInfo, targetHeight: number, filterConfig: FilterConfig): ProjectionImage {
     const { canvas, minX, minY, width, height } = boundsInfo;
     const scale = targetHeight / height;
     const targetWidth = Math.max(1, Math.round(width * scale));
@@ -92,6 +124,11 @@ function cropAndResize(boundsInfo, targetHeight, filterConfig) {
     finalCanvas.height = targetHeight;
 
     const ctx = finalCanvas.getContext('2d');
+
+    if (!ctx) {
+        throw new Error('Canvas 2D context is unavailable');
+    }
+
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(canvas, minX, minY, width, height, 0, 0, targetWidth, targetHeight);
 
@@ -113,7 +150,7 @@ function cropAndResize(boundsInfo, targetHeight, filterConfig) {
     };
 }
 
-async function prepareSingleProjection(file, filterConfig, targetHeight) {
+async function prepareSingleProjection(file: File, filterConfig: FilterConfig, targetHeight: number) {
     const image = await readImage(file);
     const bounds = getVisibleBounds(image, filterConfig);
 
@@ -124,7 +161,17 @@ async function prepareSingleProjection(file, filterConfig, targetHeight) {
     return cropAndResize(bounds, targetHeight, filterConfig);
 }
 
-export async function prepareProjectionImages({ frontFile, sideFile, filterConfig, targetHeight }) {
+export async function prepareProjectionImages({
+    frontFile,
+    sideFile,
+    filterConfig,
+    targetHeight
+}: {
+    frontFile: File;
+    sideFile: File;
+    filterConfig: FilterConfig;
+    targetHeight: number;
+}) {
     const [front, side] = await Promise.all([
         prepareSingleProjection(frontFile, filterConfig, targetHeight),
         prepareSingleProjection(sideFile, filterConfig, targetHeight)

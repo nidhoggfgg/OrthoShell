@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-function disposeMaterial(material) {
+function disposeMaterial(material: THREE.Material | THREE.Material[]) {
     if (Array.isArray(material)) {
         for (const entry of material) {
             entry.dispose();
@@ -12,17 +12,19 @@ function disposeMaterial(material) {
     material.dispose();
 }
 
-function setShadowState(object, enabled) {
-    object.traverse((child) => {
-        if (!child.isMesh) {
+function setShadowState(object: THREE.Object3D, enabled: boolean) {
+    object.traverse((child: THREE.Object3D) => {
+        const meshChild = child as THREE.Mesh;
+
+        if (!meshChild.isMesh) {
             return;
         }
 
-        child.castShadow = enabled;
+        meshChild.castShadow = enabled;
     });
 }
 
-function fitCameraToMesh(camera, controls, mesh) {
+function fitCameraToMesh(camera: THREE.PerspectiveCamera, controls: OrbitControls, mesh: THREE.Mesh) {
     const box = new THREE.Box3().setFromObject(mesh);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -44,7 +46,7 @@ function fitCameraToMesh(camera, controls, mesh) {
     controls.update();
 }
 
-function updateStageForMesh(grid, keyLight, mesh) {
+function updateStageForMesh(grid: THREE.GridHelper, keyLight: THREE.DirectionalLight, mesh: THREE.Mesh) {
     const box = new THREE.Box3().setFromObject(mesh);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -58,7 +60,7 @@ function updateStageForMesh(grid, keyLight, mesh) {
     keyLight.target.updateMatrixWorld();
 }
 
-export function createSceneApp(container) {
+export function createSceneApp(container: HTMLDivElement) {
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
     const scene = new THREE.Scene();
@@ -101,11 +103,14 @@ export function createSceneApp(container) {
     scene.add(keyLight.target);
 
     const grid = new THREE.GridHelper(180, 18, 0xb9c8d8, 0xdbe4ec);
-    grid.material.opacity = 0.26;
-    grid.material.transparent = true;
+    const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
+    for (const material of gridMaterials) {
+        material.opacity = 0.26;
+        material.transparent = true;
+    }
     scene.add(grid);
 
-    let currentMesh = null;
+    let currentMesh: THREE.Mesh | null = null;
 
     function animate() {
         requestAnimationFrame(animate);
@@ -113,7 +118,7 @@ export function createSceneApp(container) {
         renderer.render(scene, camera);
     }
 
-    function setMesh(mesh) {
+    function setMesh(mesh: THREE.Mesh) {
         if (currentMesh) {
             scene.remove(currentMesh);
             currentMesh.geometry.dispose();
@@ -127,7 +132,7 @@ export function createSceneApp(container) {
         fitCameraToMesh(camera, controls, mesh);
     }
 
-    function resize(widthValue, heightValue) {
+    function resize(widthValue: number, heightValue: number) {
         camera.aspect = widthValue / heightValue;
         camera.updateProjectionMatrix();
         renderer.setSize(widthValue, heightValue);
